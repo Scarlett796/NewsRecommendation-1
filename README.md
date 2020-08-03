@@ -19,7 +19,7 @@ Implementation of several news recommendation methods in Pytorch.
 - **Clone this repository**	
 
   ```bash
-  git clone 
+  git clone https://github.com/yflyl613/NewsRecommendation.git
   cd NewsRecommendation
   mkdir dataset
   ```
@@ -28,7 +28,7 @@ Implementation of several news recommendation methods in Pytorch.
 
   - Dowload GloVe pre-trained word embedding (https://nlp.stanford.edu/data/glove.840B.300d.zip)
 
-  - Unzip it and put it `NewsRecommendation/dataset`
+  - Unzip and put it `NewsRecommendation/dataset`
 
   - Create a new directory in `NewsRecommendation/dataset` as `MINDsmall`
 
@@ -37,7 +37,7 @@ Implementation of several news recommendation methods in Pytorch.
     - Training Set: https://mind201910small.blob.core.windows.net/release/MINDsmall_train.zip
     - Validation Set: https://mind201910small.blob.core.windows.net/release/MINDsmall_dev.zip
 
-  - Unzip them and put them in `NewsRecommendation/dataset/MINDsmall`
+  - Unzip and put them in `NewsRecommendation/dataset/MINDsmall`
 
   - After those operations above, the sturcture of `NewsRecommendation/dataset` should look like:
 
@@ -53,7 +53,7 @@ Implementation of several news recommendation methods in Pytorch.
 - **Start training**
 
   ```bash
-  cd src
+  cd NewsRecommendation/src
   python main.py  # add command line arguments behind, see `option.py` for details
   # e.g python main.py --model NRMS
   ```
