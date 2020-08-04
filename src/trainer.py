@@ -18,6 +18,14 @@ class Trainer:
         self.loss_list = []
         self.epoch = 0
         self.batch_num = 0
+        if args.load is not None:
+            checkpoint = torch.load(args.load, map_location=self.args.device)
+            self.optimizer.load_state_dict(checkpoint['optimizer'])
+            self.epoch = checkpoint['epoch']
+            self.batch_num = checkpoint['batch_num']
+            self.loss_list = checkpoint['loss_list']
+            print('Loading optimizer from', args.load)
+            print('Resume from epoch', self.epoch)
         if not os.path.exists('../result'):
             os.mkdir('../result')
         if self.args.save is None:
@@ -68,7 +76,11 @@ class Trainer:
     def save(self):
         print('Saving model...')
         checkpoint = {
-            'model': self.model.model.state_dict()
+            'model': self.model.state_dict(),
+            'optimizer': self.optimizer.state_dict(),
+            'epoch': self.epoch,
+            'batch_num': self.batch_num,
+            'loss_list': self.loss_list
         }
         torch.save(checkpoint, os.path.join(self.save_dir, 'checkpoints', 'epoch' + str(self.epoch) + '.pt'))
         print('Model saved as', os.path.join(self.save_dir, 'checkpoints', 'epoch' + str(self.epoch) + '.pt'))

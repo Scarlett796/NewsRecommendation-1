@@ -7,13 +7,13 @@ parser.add_argument('--seed', type=int, default=0,
                     help='random seed')
 parser.add_argument('--n_threads', type=int, default=0,
                     help='number of threads for data loading')
-parser.add_argument('--cpu', type=bool, default=True,
+parser.add_argument('--cpu', type=bool, default=False,
                     help='use cpu only')
 parser.add_argument('--n_GPUs', type=int, default=1,
                     help='number of GPUs')
 
 # Data specifications
-parser.add_argument('--pre', type=bool, default=False,
+parser.add_argument('--pre', type=bool, default=True,
                     help='preprocess the dataset')
 parser.add_argument('--train_dir', type=str, default='../dataset/MINDsmall/MINDsmall_train',
                     help='training set directory')
