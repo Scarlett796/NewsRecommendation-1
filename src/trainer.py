@@ -34,6 +34,7 @@ class Trainer:
         self.model.train()
         print('[Epoch ' + str(self.epoch + 1) + ']')
         for i, batch in enumerate(self.train_loader):
+            batch['type'] = 'train'
             self.optimizer.zero_grad()
             predict = self.model(batch)
             loss = torch.stack([x[0] for x in -F.log_softmax(predict, dim=1)]).mean()
@@ -51,6 +52,7 @@ class Trainer:
             AUC_list, MRR_list, nDCG5_list, nDCG10_list = [], [], [], []
             with tqdm(total=len(self.test_loader), desc='Testing') as p:
                 for i, batch in enumerate(self.test_loader):
+                    batch['type'] = 'test'
                     y_true = torch.stack(batch['y_true']).squeeze(dim=1).tolist()
                     predict = self.model(batch).squeeze(dim=0).tolist()
                     AUC_list.append(AUC(y_true, predict))

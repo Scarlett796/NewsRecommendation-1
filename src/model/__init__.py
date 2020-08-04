@@ -17,8 +17,8 @@ class Model(nn.Module):
         self.model = module.make_model(args, word_embedding).to(self.device)
         if args.load is not None:
             print('Loading model from', args.load)
-            checkpoint = torch.load(args.load)
-            self.model.model.load_state_dict(checkpoint['model'])
+            checkpoint = torch.load(args.load, map_location=self.device)
+            self.model.load_state_dict(checkpoint['model'])
         else:
             print('Finish making model ' + args.model)
 

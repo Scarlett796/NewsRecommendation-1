@@ -9,6 +9,7 @@ class MyDataset(Dataset):
         self.args = args
         self.type = type
         self.empty_news = {
+            #'news_id': 0,
             'category': 0,
             'subcategory': 0,
             'title': [0 for _ in range(args.n_words_title)],
@@ -30,6 +31,7 @@ class MyDataset(Dataset):
             if news_id in self.news.index:
                 row = self.news.loc[news_id]
                 news = {
+                    #'news_id': news_id,
                     'category': row.category,
                     'subcategory': row.subcategory,
                     'title': literal_eval(row.title),

@@ -7,13 +7,13 @@ parser.add_argument('--seed', type=int, default=0,
                     help='random seed')
 parser.add_argument('--n_threads', type=int, default=0,
                     help='number of threads for data loading')
-parser.add_argument('--cpu', type=bool, default=False,
+parser.add_argument('--cpu', type=bool, default=True,
                     help='use cpu only')
 parser.add_argument('--n_GPUs', type=int, default=1,
                     help='number of GPUs')
 
 # Data specifications
-parser.add_argument('--pre', type=bool, default=True,
+parser.add_argument('--pre', type=bool, default=False,
                     help='preprocess the dataset')
 parser.add_argument('--train_dir', type=str, default='../dataset/MINDsmall/MINDsmall_train',
                     help='training set directory')
@@ -55,7 +55,7 @@ parser.add_argument('-n_words', type=int, default=31313,
                     help='number of words')
 
 # Training specifications
-parser.add_argument('--train', type=bool, default=True,
+parser.add_argument('--train', type=bool, default=False,
                     help='train or test only')
 parser.add_argument('--epochs', type=int, default=5,
                     help='number of epochs for training')

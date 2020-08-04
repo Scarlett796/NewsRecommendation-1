@@ -3,6 +3,7 @@ import numpy as np
 import os
 import random
 from nltk.tokenize import word_tokenize
+from tqdm import tqdm
 
 def process_behaviors(args):
     random.seed(args.seed)
@@ -175,12 +176,13 @@ def word_embedding(args):
     glove_embedding = pd.read_table(args.embedding_file, sep=' ', header=None, index_col=0, quoting=3)
     embedding_result = np.random.normal(size=(len(word_dict) + 1, args.word_embedding_dim))
     word_missing = 0
-    print('Generating word embedding...')
-    for k, v in word_dict.items():
-        if k in glove_embedding.index:
-            embedding_result[v] = glove_embedding.loc[k].tolist()
-        else:
-            word_missing += 1
+    with tqdm(total=len(word_dict), desc="Generating word embedding") as pbar:
+        for k, v in word_dict.items():
+            if k in glove_embedding.index:
+                embedding_result[v] = glove_embedding.loc[k].tolist()
+            else:
+                word_missing += 1
+            pbar.update(1)
     np.save(os.path.join(args.data_dir, 'word_embedding.npy'), embedding_result)
     print('\ttotal_missing_word:', word_missing)
     print('Finish word embedding')

@@ -4,6 +4,7 @@ from preprocess import preprpocess_data
 from loader import Loader
 from model import Model
 from trainer import Trainer
+from cache import NewsCache
 import numpy as np
 import os
 
@@ -21,11 +22,14 @@ def main():
         word_embedding = None
     my_model = Model(args, word_embedding)
     my_loader = Loader(args)
+    NewsCache(args, my_model, False)
     my_trainer = Trainer(args, my_model, my_loader)
-    while not my_trainer.terminate():
-        my_trainer.train()
-        my_trainer.test()
-    my_trainer.plot_loss()
+    my_trainer.test()
+
+    #while not my_trainer.terminate():
+    #    my_trainer.train()
+    #    my_trainer.test()
+    #my_trainer.plot_loss()
 
 
 if __name__ == '__main__':
