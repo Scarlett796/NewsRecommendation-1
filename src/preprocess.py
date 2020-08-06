@@ -163,6 +163,8 @@ def process_news(args):
             pass
         test_news.at[row.Index, 'title'] = title
         test_news.at[row.Index, 'abstract'] = abstract
+    test_news = test_news.append([{'news_id': 0, 'category': 0, 'subcategory': 0, 'title': [0 for _ in range(args.n_words_title)],
+                                   'abstract': [0 for _ in range(args.n_words_abstract)]}], ignore_index=True)
     test_news.to_csv(os.path.join(args.data_dir, 'test_news.csv'), sep='\t', index=False,
                       columns=['news_id', 'category', 'subcategory', 'title', 'abstract'])
     print('Finish news preprocessing for testing')
@@ -176,18 +178,18 @@ def word_embedding(args):
     glove_embedding = pd.read_table(args.embedding_file, sep=' ', header=None, index_col=0, quoting=3)
     embedding_result = np.random.normal(size=(len(word_dict) + 1, args.word_embedding_dim))
     word_missing = 0
-    with tqdm(total=len(word_dict), desc="Generating word embedding") as pbar:
+    with tqdm(total=len(word_dict), desc="Generating word embedding") as p:
         for k, v in word_dict.items():
             if k in glove_embedding.index:
                 embedding_result[v] = glove_embedding.loc[k].tolist()
             else:
                 word_missing += 1
-            pbar.update(1)
+            p.update(1)
     np.save(os.path.join(args.data_dir, 'word_embedding.npy'), embedding_result)
     print('\ttotal_missing_word:', word_missing)
     print('Finish word embedding')
 
-def preprpocess_data(args):
+def preprocess_data(args):
     if not os.path.exists(args.data_dir):
         os.mkdir(args.data_dir)
     print('Start data preprocessing...')

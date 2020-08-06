@@ -1,4 +1,4 @@
-from dataset import MyDataset
+from dataset import MyDataset, TestNewsDataset
 from torch.utils.data import DataLoader
 
 class Loader:
@@ -13,10 +13,11 @@ class Loader:
                 pin_memory=not args.cpu,
                 drop_last=True
             )
-        self.test_loader = DataLoader(
-            MyDataset(args, 'test'),
-            batch_size=1,
+        self.test_news_loader = DataLoader(
+            TestNewsDataset(args),
+            batch_size=args.batch_size,
             shuffle=False,
             num_workers=args.n_threads,
-            pin_memory=not args.cpu
+            pin_memory=not args.cpu,
+            drop_last=False
         )

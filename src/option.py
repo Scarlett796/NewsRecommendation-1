@@ -51,15 +51,15 @@ parser.add_argument('--window_size', type=int, default=3,
                     help='size of filter in CNN')
 parser.add_argument('-n_categories', type=int, default=275,
                     help='number of categories and subcategories')
-parser.add_argument('-n_words', type=int, default=31313,
+parser.add_argument('-n_words', type=int, default=31314,
                     help='number of words')
 
 # Training specifications
-parser.add_argument('--train', type=bool, default=False,
+parser.add_argument('--train', type=bool, default=True,
                     help='train or test only')
 parser.add_argument('--epochs', type=int, default=5,
                     help='number of epochs for training')
-parser.add_argument('--batch_size', type=int, default=100,
+parser.add_argument('--batch_size', type=int, default=64,
                     help='size of each batch')
 parser.add_argument('--lr', type=float, default=0.001,
                     help='learning rate')

@@ -1,4 +1,4 @@
-# NewsRecommendation
+# News Recommendation
 Implementation of several news recommendation methods in Pytorch.
 
 
@@ -30,7 +30,7 @@ Implementation of several news recommendation methods in Pytorch.
 
   - Unzip and put it `NewsRecommendation/dataset`
 
-  - Create a new directory in `NewsRecommendation/dataset` as `MINDsmall`
+  - Create a new directory `NewsRecommendation/dataset/MINDsmall`
 
   - Download MIND-small dataset
 
@@ -55,15 +55,17 @@ Implementation of several news recommendation methods in Pytorch.
   ```bash
   cd NewsRecommendation/src
   python main.py  # add command line arguments behind, see `option.py` for details
-  # e.g python main.py --model NRMS
+  # eg. python main.py --model NRMS
   ```
 
   
 
-### Currently implemented methods
+### Result
 
-- [NAML](https://arxiv.org/abs/1907.05576)
-- [NRMS](https://www.aclweb.org/anthology/D19-1671/)
+| Model |  AUC  |  MRR  | nDCG@5 | nDCG@10 |           Configuration           |
+| :---: | :---: | :---: | :----: | :-----: | :-------------------------------: |
+| NAML  | 67.89 | 33.01 | 36.69  |  42.75  | batch size 64, training 2 epochs  |
+| NRMS  | 65.93 | 31.40 | 34.51  |  40.83  | batch size 192, training 5 epochs |
 
 
 

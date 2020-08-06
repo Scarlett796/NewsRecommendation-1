@@ -22,3 +22,9 @@ class NRMS(torch.nn.Module):
         predict = torch.stack([self.click_predictor(news_vector, user_vector) for news_vector in candidate_vector],
                               dim=1)
         return predict
+
+    def get_user_vector(self, browsed_news_vector):
+        return self.user_encoder(browsed_news_vector)
+
+    def get_news_vector(self, candidate):
+        return self.news_encoder(candidate)

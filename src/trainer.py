@@ -4,15 +4,18 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import os
 import datetime
+import pandas as pd
 from metrics import AUC, MRR, nDCG
 import numpy as np
+from dataset import TestUserDataset
+from torch.utils.data import DataLoader
 
 class Trainer:
     def __init__(self, args, model, loader):
         self.args = args
         self.model = model
         self.train_loader = loader.train_loader
-        self.test_loader = loader.test_loader
+        self.test_news_loader = loader.test_news_loader
         self.optimizer = torch.optim.Adam(model.model.parameters(), lr=args.lr,
                                           betas=args.betas, eps=args.epsilon)
         self.loss_list = []
@@ -41,16 +44,18 @@ class Trainer:
     def train(self):
         self.model.train()
         print('[Epoch ' + str(self.epoch + 1) + ']')
-        for i, batch in enumerate(self.train_loader):
-            batch['type'] = 'train'
-            self.optimizer.zero_grad()
-            predict = self.model(batch)
-            loss = torch.stack([x[0] for x in -F.log_softmax(predict, dim=1)]).mean()
-            self.loss_list.append(loss.item())
-            print('\tbatch_num:', i+1, '\tloss:', loss.item())
-            loss.backward()
-            self.optimizer.step()
-            self.batch_num += 1
+        with tqdm(total=len(self.train_loader), desc='Training') as p:
+            for i, batch in enumerate(self.train_loader):
+                self.optimizer.zero_grad()
+                predict = self.model(batch)
+                loss = torch.stack([x[0] for x in -F.log_softmax(predict, dim=1)]).mean()
+                self.loss_list.append(loss.item())
+                if i % 200 == 0 or i + 1 == len(self.train_loader):
+                    tqdm.write('Loss: ' + str(np.mean(self.loss_list)))
+                loss.backward()
+                self.optimizer.step()
+                self.batch_num += 1
+                p.update(1)
         self.epoch += 1
         self.save()
 
@@ -58,11 +63,42 @@ class Trainer:
         with torch.no_grad():
             self.model.eval()
             AUC_list, MRR_list, nDCG5_list, nDCG10_list = [], [], [], []
-            with tqdm(total=len(self.test_loader), desc='Testing') as p:
-                for i, batch in enumerate(self.test_loader):
-                    batch['type'] = 'test'
-                    y_true = torch.stack(batch['y_true']).squeeze(dim=1).tolist()
-                    predict = self.model(batch).squeeze(dim=0).tolist()
+            total_news_id = {}
+            with tqdm(total=len(self.test_news_loader), desc='Generating test news vector') as p:
+                for i, batch in enumerate(self.test_news_loader):
+                    news_id_batch, news_batch = batch
+                    news_vector = self.model.model.get_news_vector(news_batch)
+                    if i == 0:
+                        total_test_news = news_vector
+                    else:
+                        total_test_news = torch.cat([total_test_news, news_vector])
+                    for news_id in news_id_batch:
+                        total_news_id[news_id] = len(total_news_id)
+                    p.update(1)
+            test_user_loader = DataLoader(
+                TestUserDataset(self.args, total_test_news, total_news_id),
+                batch_size=self.args.batch_size,
+                shuffle=False,
+                num_workers=self.args.n_threads,
+                pin_memory=not self.args.cpu
+            )
+            with tqdm(total=len(test_user_loader), desc='Generating test user vector') as p:
+                for i, batch in enumerate(test_user_loader):
+                    user_vector = self.model.model.get_user_vector(batch)
+                    if i == 0:
+                        total_test_user = user_vector
+                    else:
+                        total_test_user = torch.cat([total_test_user, user_vector])
+                    p.update(1)
+            behaviors = pd.read_table(os.path.join(self.args.data_dir, 'test_behaviors.csv'), na_filter=False,
+                                      usecols=[2, 3], names=['impressions', 'y_true'], header=0)
+            with tqdm(total=len(behaviors), desc='Predicting') as p:
+                for row in behaviors.itertuples():
+                    user_vector = total_test_user[row.Index]
+                    tmp = row.impressions.split(' ')
+                    news_vector = torch.cat([total_test_news[total_news_id[i]].unsqueeze(dim=0) for i in tmp])
+                    y_true = [int(x) for x in row.y_true.split(' ')]
+                    predict = torch.matmul(news_vector, user_vector).tolist()
                     AUC_list.append(AUC(y_true, predict))
                     MRR_list.append(MRR(y_true, predict))
                     nDCG5_list.append(nDCG(y_true, predict, 5))
@@ -76,7 +112,7 @@ class Trainer:
     def save(self):
         print('Saving model...')
         checkpoint = {
-            'model': self.model.state_dict(),
+            'model': self.model.model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
             'epoch': self.epoch,
             'batch_num': self.batch_num,
@@ -93,5 +129,6 @@ class Trainer:
             return self.epoch >= self.args.epochs
 
     def plot_loss(self):
+        print('Plotting loss figure...')
         plt.plot([_ for _ in range(self.batch_num)], self.loss_list)
         plt.savefig(os.path.join(self.save_dir, 'loss.png'))
