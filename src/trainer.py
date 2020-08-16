@@ -47,11 +47,18 @@ class Trainer:
         with tqdm(total=len(self.train_loader), desc='Training') as p:
             for i, batch in enumerate(self.train_loader):
                 self.optimizer.zero_grad()
-                predict = self.model(batch)
+                if self.args.model == 'TANR':
+                    predict, topic_loss = self.model(batch)
+                else:
+                    predict = self.model(batch)
                 loss = torch.stack([x[0] for x in -F.log_softmax(predict, dim=1)]).mean()
+                if self.args.model == 'TANR':
+                    loss += self.args.topic_weight * topic_loss
                 self.loss_list.append(loss.item())
                 if i % 200 == 0 or i + 1 == len(self.train_loader):
                     tqdm.write('Loss: ' + str(np.mean(self.loss_list)))
+                    if self.args.model == 'TANR':
+                        tqdm.write('\tTopic_loss: ' + str(topic_loss.item()))
                 loss.backward()
                 self.optimizer.step()
                 self.batch_num += 1
@@ -80,7 +87,7 @@ class Trainer:
                 batch_size=self.args.batch_size,
                 shuffle=False,
                 num_workers=self.args.n_threads,
-                pin_memory=not self.args.cpu
+                pin_memory=False
             )
             with tqdm(total=len(test_user_loader), desc='Generating test user vector') as p:
                 for i, batch in enumerate(test_user_loader):

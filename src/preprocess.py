@@ -76,23 +76,36 @@ def process_behaviors(args):
 
 def process_news(args):
     random.seed(args.seed)
+
+    news_docs = pd.read_table(args.news_docs, header=None, usecols=[0, 6], names=['nid', 'body'], index_col=0, na_filter=False)
+
     if args.train:
         print('Preprocessing news in training set...')
         train_set = os.path.join(args.train_dir, 'news.tsv')
-        train_news = pd.read_table(train_set, header=None, usecols=[0, 1, 2, 3, 4], na_filter=False,
-                                   names=['news_id', 'category', 'subcategory', 'title', 'abstract'])
+        train_news = pd.read_table(train_set, header=None, usecols=[0, 1, 2, 3, 4, 5], na_filter=False,
+                                   names=['news_id', 'category', 'subcategory', 'title', 'abstract', 'body'])
 
         # encode category, subcategory and word
         category_dict, word_freq_dict, word_dict = {}, {}, {}
-        for row in train_news.itertuples():
-            if row.category not in category_dict:
-                category_dict[row.category] = len(category_dict) + 1
-            if row.subcategory not in category_dict:
-                category_dict[row.subcategory] = len(category_dict) + 1
-            for word in word_tokenize(row.title.lower()):
-                word_freq_dict[word] = word_freq_dict.get(word, 0) + 1
-            for word in word_tokenize(row.abstract.lower()):
-                word_freq_dict[word] = word_freq_dict.get(word, 0) + 1
+        with tqdm(total=len(train_news), desc='Processing training news') as p:
+            for row in train_news.itertuples():
+                nid = row.body.split('/')[-1].split('.')[-2]
+                news_body = news_docs.loc[nid, 'body']
+                if news_body == '-':
+                    news_body = ''
+                train_news.at[row.Index, 'body'] = news_body
+
+                if row.category not in category_dict:
+                    category_dict[row.category] = len(category_dict) + 1
+                if row.subcategory not in category_dict:
+                    category_dict[row.subcategory] = len(category_dict) + 1
+                for word in word_tokenize(row.title.lower()):
+                    word_freq_dict[word] = word_freq_dict.get(word, 0) + 1
+                for word in word_tokenize(row.abstract.lower()):
+                    word_freq_dict[word] = word_freq_dict.get(word, 0) + 1
+                for word in word_tokenize(train_news.at[row.Index, 'body'].lower()):
+                    word_freq_dict[word] = word_freq_dict.get(word, 0) + 1
+                p.update(1)
 
         for k, v in word_freq_dict.items():
             if v >= args.word_freq_threshold:
@@ -107,10 +120,68 @@ def process_news(args):
         print('\ttotal_word:', len(word_dict))
         print('\tRemember to set n_categories = {} and n_words = {} in option.py'.format(len(category_dict) + 1, len(word_dict) + 1))
 
-        for row in train_news.itertuples():
-            train_news.at[row.Index, 'category'] = category_dict[row.category]
-            train_news.at[row.Index, 'subcategory'] = category_dict[row.subcategory]
-            title, abstract = [0 for _ in range(args.n_words_title)], [0 for _ in range(args.n_words_abstract)]
+        with tqdm(total=len(train_news), desc='Encoding training news') as p:
+            for row in train_news.itertuples():
+                train_news.at[row.Index, 'category'] = category_dict[row.category]
+                train_news.at[row.Index, 'subcategory'] = category_dict[row.subcategory]
+                title = [0 for _ in range(args.n_words_title)]
+                abstract = [0 for _ in range(args.n_words_abstract)]
+                body = [0 for _ in range(args.n_words_body)]
+                try:
+                    for i, word in enumerate(word_tokenize(row.title.lower())):
+                        if word in word_dict:
+                            title[i] = word_dict[word]
+                except IndexError:
+                    pass
+                try:
+                    for i, word in enumerate(word_tokenize(row.abstract.lower())):
+                        if word in word_dict:
+                            abstract[i] = word_dict[word]
+                except IndexError:
+                    pass
+                try:
+                    for i, word in enumerate(word_tokenize(row.body.lower())):
+                        if word in word_dict:
+                            body[i] = word_dict[word]
+                except IndexError:
+                    pass
+                train_news.at[row.Index, 'title'] = title
+                train_news.at[row.Index, 'abstract'] = abstract
+                train_news.at[row.Index, 'body'] = body
+                p.update(1)
+        train_news.to_csv(os.path.join(args.data_dir, 'train_news.csv'), sep='\t', index=False,
+                          columns=['news_id', 'category', 'subcategory', 'title', 'abstract', 'body'])
+        print('Finish news preprocessing for training')
+    
+    print('Preprocessing news in testing set...')
+    test_set = os.path.join(args.test_dir, 'news.tsv')
+    test_news = pd.read_table(test_set, header=None, usecols=[0, 1, 2, 3, 4, 5], na_filter=False,
+                               names=['news_id', 'category', 'subcategory', 'title', 'abstract', 'body'])
+
+    # encode category, subcategory and word
+    category_dict = dict(pd.read_csv(os.path.join(args.data_dir, 'category_dict.csv'), sep='\t', na_filter=False, header=0).values.tolist())
+    word_dict = dict(pd.read_csv(os.path.join(args.data_dir, 'word_dict.csv'), sep='\t', na_filter=False, header=0).values.tolist())
+
+    with tqdm(total=len(test_news), desc='Encoding test news') as p:
+        for row in test_news.itertuples():
+            nid = row.body.split('/')[-1].split('.')[-2]
+            news_body = news_docs.loc[nid, 'body']
+            if news_body == '-':
+                news_body = ''
+            test_news.at[row.Index, 'body'] = news_body
+
+            if row.category in category_dict:
+                test_news.at[row.Index, 'category'] = category_dict[row.category]
+            else:
+                test_news.at[row.Index, 'category'] = 0
+            if row.subcategory in category_dict:
+                test_news.at[row.Index, 'subcategory'] = category_dict[row.subcategory]
+            else:
+                test_news.at[row.Index, 'subcategory'] = 0
+
+            title = [0 for _ in range(args.n_words_title)]
+            abstract = [0 for _ in range(args.n_words_abstract)]
+            body = [0 for _ in range(args.n_words_body)]
             try:
                 for i, word in enumerate(word_tokenize(row.title.lower())):
                     if word in word_dict:
@@ -123,50 +194,22 @@ def process_news(args):
                         abstract[i] = word_dict[word]
             except IndexError:
                 pass
-            train_news.at[row.Index, 'title'] = title
-            train_news.at[row.Index, 'abstract'] = abstract
-        train_news.to_csv(os.path.join(args.data_dir, 'train_news.csv'), sep='\t', index=False,
-                          columns=['news_id', 'category', 'subcategory', 'title', 'abstract'])
-        print('Finish news preprocessing for training')
-    
-    print('Preprocessing news in testing set...')
-    test_set = os.path.join(args.test_dir, 'news.tsv')
-    test_news = pd.read_table(test_set, header=None, usecols=[0, 1, 2, 3, 4], na_filter=False,
-                               names=['news_id', 'category', 'subcategory', 'title', 'abstract'])
+            try:
+                for i, word in enumerate(word_tokenize(test_news.at[row.Index, 'body'] .lower())):
+                    if word in word_dict:
+                        body[i] = word_dict[word]
+            except IndexError:
+                pass
+            test_news.at[row.Index, 'title'] = title
+            test_news.at[row.Index, 'abstract'] = abstract
+            test_news.at[row.Index, 'body'] = body
+            p.update(1)
 
-    # encode category, subcategory and word
-    category_dict = dict(pd.read_csv(os.path.join(args.data_dir, 'category_dict.csv'), sep='\t', na_filter=False, header=0).values.tolist())
-    word_dict = dict(pd.read_csv(os.path.join(args.data_dir, 'word_dict.csv'), sep='\t', na_filter=False, header=0).values.tolist())
-
-    for row in test_news.itertuples():
-        if row.category in category_dict:
-            test_news.at[row.Index, 'category'] = category_dict[row.category]
-        else:
-            test_news.at[row.Index, 'category'] = 0
-        if row.subcategory in category_dict:
-            test_news.at[row.Index, 'subcategory'] = category_dict[row.subcategory]
-        else:
-            test_news.at[row.Index, 'subcategory'] = 0
-
-        title, abstract = [0 for _ in range(args.n_words_title)], [0 for _ in range(args.n_words_abstract)]
-        try:
-            for i, word in enumerate(word_tokenize(row.title.lower())):
-                if word in word_dict:
-                    title[i] = word_dict[word]
-        except IndexError:
-            pass
-        try:
-            for i, word in enumerate(word_tokenize(row.abstract.lower())):
-                if word in word_dict:
-                    abstract[i] = word_dict[word]
-        except IndexError:
-            pass
-        test_news.at[row.Index, 'title'] = title
-        test_news.at[row.Index, 'abstract'] = abstract
     test_news = test_news.append([{'news_id': 0, 'category': 0, 'subcategory': 0, 'title': [0 for _ in range(args.n_words_title)],
-                                   'abstract': [0 for _ in range(args.n_words_abstract)]}], ignore_index=True)
+                                   'abstract': [0 for _ in range(args.n_words_abstract)], 'body': [0 for _ in range(args.n_words_body)]}],
+                                   ignore_index=True)
     test_news.to_csv(os.path.join(args.data_dir, 'test_news.csv'), sep='\t', index=False,
-                      columns=['news_id', 'category', 'subcategory', 'title', 'abstract'])
+                      columns=['news_id', 'category', 'subcategory', 'title', 'abstract', 'body'])
     print('Finish news preprocessing for testing')
 
 

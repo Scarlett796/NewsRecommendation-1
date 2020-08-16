@@ -1,4 +1,5 @@
 # News Recommendation
+
 Implementation of several news recommendation methods in Pytorch.
 
 
@@ -62,12 +63,27 @@ Implementation of several news recommendation methods in Pytorch.
 
 ### Result
 
-| Model |  AUC  |  MRR  | nDCG@5 | nDCG@10 |           Configuration           |
-| :---: | :---: | :---: | :----: | :-----: | :-------------------------------: |
-| NAML  | 67.89 | 33.01 | 36.69  |  42.75  | batch size 64, training 2 epochs  |
-| NRMS  | 65.93 | 31.40 | 34.51  |  40.83  | batch size 192, training 5 epochs |
+- **NAML**
 
+  |   News representation   |  AUC  |  MRR  | nDCG@5 | nDCG@10 |      Configuration       |
+  | :---------------------: | :---: | :---: | :----: | :-----: | :----------------------: |
+  |          title          | 66.39 | 31.76 | 35.37  |  41.53  |  batch size 64, 1 epoch  |
+  |          body           | 67.29 | 32.56 | 35.83  |  42.08  |  batch size 64, 2 epoch  |
+  |    title + abstract     | 67.84 | 31.87 | 35.78  |  41.91  | batch size 64, 4 epochs  |
+  |      title + body       | 67.88 | 32.82 | 36.36  |  42.55  |  batch size 64, 1 epoch  |
+  | title + abstract + body | 67.71 | 31.93 | 35.40  |  41.81  | batch size 128, 3 epochs |
 
+- **NRMS**
+
+  | News representation |  AUC  |  MRR  | nDCG@5 | nDCG@10 |      Configuration       |
+  | :-----------------: | :---: | :---: | :----: | :-----: | :----------------------: |
+  |        title        | 65.93 | 31.40 | 34.51  |  40.83  | batch size 192, 5 epochs |
+
+- **TANR**
+
+  | News representation |  AUC  |  MRR  | nDCG@5 | nDCG@10 |      Configuration       |
+  | :-----------------: | :---: | :---: | :----: | :-----: | :----------------------: |
+  |        title        | 65.91 | 30.94 | 34.36  |  40.61  | batch size 128, 3 epochs |
 
 ### Citation
 

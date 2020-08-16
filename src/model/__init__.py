@@ -9,7 +9,7 @@ class Model(nn.Module):
         print('Making model...')
 
         self.cpu = args.cpu
-        self.device = torch.device('cpu' if args.cpu else 'cuda:0')
+        self.device = torch.device('cpu' if args.cpu else 'cuda')
         args.device = self.device
         self.n_GPUs = args.n_GPUs
 

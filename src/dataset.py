@@ -13,7 +13,8 @@ class MyDataset(Dataset):
             'category': 0,
             'subcategory': 0,
             'title': [0 for _ in range(args.n_words_title)],
-            'abstract': [0 for _ in range(args.n_words_abstract)]
+            'abstract': [0 for _ in range(args.n_words_abstract)],
+            'body': [0 for _ in range(args.n_words_body)]
         }
 
         if type == 'train':
@@ -34,7 +35,8 @@ class MyDataset(Dataset):
                     'category': row.category,
                     'subcategory': row.subcategory,
                     'title': literal_eval(row.title),
-                    'abstract': literal_eval(row.abstract)
+                    'abstract': literal_eval(row.abstract),
+                    'body': literal_eval(row.body)
                 }
             else:
                 news = self.empty_news
@@ -104,6 +106,7 @@ class TestNewsDataset(Dataset):
             'category': row.category,
             'subcategory': row.subcategory,
             'title': literal_eval(row.title),
-            'abstract': literal_eval(row.abstract)
+            'abstract': literal_eval(row.abstract),
+            'body': literal_eval(row.body)
         }
         return row.news_id, item

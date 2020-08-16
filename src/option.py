@@ -7,13 +7,13 @@ parser.add_argument('--seed', type=int, default=0,
                     help='random seed')
 parser.add_argument('--n_threads', type=int, default=0,
                     help='number of threads for data loading')
-parser.add_argument('--cpu', type=bool, default=False,
+parser.add_argument('--cpu', type=bool, default=True,
                     help='use cpu only')
 parser.add_argument('--n_GPUs', type=int, default=1,
                     help='number of GPUs')
 
 # Data specifications
-parser.add_argument('--pre', type=bool, default=True,
+parser.add_argument('--pre', type=bool, default=False,
                     help='preprocess the dataset')
 parser.add_argument('--train_dir', type=str, default='../dataset/MINDsmall/MINDsmall_train',
                     help='training set directory')
@@ -23,11 +23,13 @@ parser.add_argument('--data_dir', type=str, default='../data',
                     help='directory for preprocessed data')
 parser.add_argument('--embedding_file', type=str, default='../dataset/glove.840B.300d.txt',
                     help='glove embedding file')
+parser.add_argument('--news_docs', type=str, default='../dataset/news_docs.tsv',
+                    help='news docs file')
 parser.add_argument('--save', type=str, default=None,
                     help='directory to save')
 
 # Model specifications
-parser.add_argument('--model', type=str, default='NAML',
+parser.add_argument('--model', type=str, default='TANR',
                     help='choose model')
 parser.add_argument('--n_browsed_news', type=int, default=50,
                     help='number of browsed news per user')
@@ -35,6 +37,8 @@ parser.add_argument('--n_words_title', type=int, default=20,
                     help='number of words per title')
 parser.add_argument('--n_words_abstract', type=int, default=50,
                     help='number of words per abstract')
+parser.add_argument('--n_words_body', type=int, default=100,
+                    help='number of words per body')
 parser.add_argument('--word_freq_threshold', type=int, default=3,
                     help='threshold for the frequency of word appearance')
 parser.add_argument('--word_embedding_dim', type=int, default=300,
@@ -51,7 +55,7 @@ parser.add_argument('--window_size', type=int, default=3,
                     help='size of filter in CNN')
 parser.add_argument('-n_categories', type=int, default=275,
                     help='number of categories and subcategories')
-parser.add_argument('-n_words', type=int, default=31314,
+parser.add_argument('-n_words', type=int, default=128097,
                     help='number of words')
 
 # Training specifications
@@ -75,5 +79,9 @@ parser.add_argument('--load', type=str, default=None,
 # NRMS specifications
 parser.add_argument('--n_heads', type=int, default=15,
                     help='heads in multi-head self-attention')
+
+# TANR specifications
+parser.add_argument('--topic_weight', type=float, default=0.2,
+                    help='lambda in the loss function of TANR')
 
 args = parser.parse_args()
